@@ -1,10 +1,9 @@
 package com.dev.cloud_connect.controller;
 
+import com.dev.cloud_connect.model.DeviceDetails;
 import com.dev.cloud_connect.service.IotService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,8 +15,6 @@ import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 @Slf4j
 @AllArgsConstructor
 public class DeviceController {
-
-    private static final Logger log = LoggerFactory.getLogger(DeviceController.class);
 
     private IotService iotService;
 
@@ -46,13 +43,12 @@ public class DeviceController {
 
 
     @GetMapping("/details/{deviceName}")
-    public ResponseEntity<String> getDeviceDetails(@PathVariable String deviceName){
+    public ResponseEntity<DeviceDetails> getDeviceDetails(@PathVariable String deviceName){
         try{
-            String result = iotService.getDeviceDetails(deviceName);
-            return ResponseEntity.ok(result);
+            return ResponseEntity.ok(iotService.getDeviceDetails(deviceName));
         }catch (ResourceNotFoundException re){
             log.error("Exception while getting details of device - ERR0R");
-            return ResponseEntity.status(404).body("No device found with name : "+deviceName);
+            return ResponseEntity.status(404).body(null);
         }
 
 
