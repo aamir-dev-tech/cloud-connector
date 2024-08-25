@@ -5,7 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/v1/device")
@@ -18,10 +22,39 @@ public class DeviceController {
     private IotService iotService;
 
 
-    @GetMapping("/register/{deviceName}")
-    public String registerDevice(@PathVariable String deviceName) {
-        log.info("Device Registration call >>>>");
+    @PostMapping(value = "/register/{deviceName}",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<String> registerDevice(@PathVariable String deviceName,
+                                                @RequestParam("certificate") MultipartFile certificateFile,
+                                                @RequestParam("privateKey") MultipartFile privateKeyFile) {
+        log.debug("Device Registration Started >>>>");
 
-        return iotService.registerDevice(deviceName);
+        try {
+            String certificatePem = new String(certificateFile.getBytes());
+            String privateKeyPem = new String(privateKeyFile.getBytes());
+
+            String result = iotService.registerDevice(deviceName, certificatePem, privateKeyPem);
+
+            log.debug("Device Registration Completed >>>> {}", result);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            log.error("Exception while creation of device - ERR0R");
+            return ResponseEntity.status(500).body("Error processing files: " + e.getMessage());
+        }
+    }
+
+
+    @GetMapping("/details/{deviceName}")
+    public ResponseEntity<String> getDeviceDetails(@PathVariable String deviceName){
+        try{
+            String result = iotService.getDeviceDetails(deviceName);
+            return ResponseEntity.ok(result);
+        }catch (ResourceNotFoundException re){
+            log.error("Exception while getting details of device - ERR0R");
+            return ResponseEntity.status(404).body("No device found with name : "+deviceName);
+        }
+
+
     }
 }
