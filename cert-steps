@@ -1,0 +1,27 @@
+Create Root key
+> openssl ecparam -genkey -name prime256v1 -out root.key
+
+Create Root csr
+> openssl req -new -
+ -days 365 -key root.key -out root.csr   (Provide CN name = dev-iot)
+
+Create CA Root certificate
+> openssl req -x509 -sha256 -days 365 -key root.key -in root.csr -out root.crt
+
+=========== These steps only for Registartion of CA to AWS ==============
+
+Create Verify key
+> openssl ecparam -genkey -name prime256v1 -out verify.key
+
+Create Verify csr
+> openssl req -new -sha256 -days 365 -key verify.key -out verify.csr  (Provide CN name = Registration code from AWS)
+
+Create Verify certificate
+> openssl x509 -req -CA  root.crt -CAkey root.key -CAcreateserial -in verify.csr -out verify.crt -days 7 -sha256
+
+========================================================================
+
+========== Create any device certificate signed by above CA =================
+> openssl ecparam -genkey -name prime256v1 -out dev-aamir-device.key
+> openssl req -new -sha256 -days 365 -key dev-aamir-device.key -out dev-aamir-device.csr (Provide CN name = Device Name)
+> openssl x509 -req -CA  root.crt -CAkey root.key -CAcreateserial -in dev-aamir-device.csr -out dev-aamir-device.crt -days 365 -sha256
