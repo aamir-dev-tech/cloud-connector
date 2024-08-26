@@ -1,7 +1,12 @@
 package com.dev.cloud_connect.controller;
 
+import com.amazonaws.services.iot.client.AWSIotException;
+import com.dev.cloud_connect.model.DataMessage;
 import com.dev.cloud_connect.model.DeviceDetails;
+import com.dev.cloud_connect.model.MessageModel;
 import com.dev.cloud_connect.service.IotService;
+import com.dev.cloud_connect.service.MQTTService;
+import com.dev.cloud_connect.service.MqttConnectService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -17,6 +22,8 @@ import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
 public class DeviceController {
 
     private IotService iotService;
+
+    private MqttConnectService mqttConnectService;
 
 
     @PostMapping(value = "/register/{deviceName}",
@@ -50,7 +57,40 @@ public class DeviceController {
             log.error("Exception while getting details of device - ERR0R");
             return ResponseEntity.status(404).body(null);
         }
+    }
 
+    @GetMapping("/connect/{deviceName}")
+    public ResponseEntity<String> connectDevice(@PathVariable String deviceName) {
+        try{
+            String status = mqttConnectService.connect(deviceName);
+            return ResponseEntity.status(200).body("Device "+deviceName+" connected to AWS Cloud. "+status);
+        }catch (Exception e){
+            log.error("Exception while getting connected - ERR0R");
+            return ResponseEntity.status(500).body("Device "+deviceName+" failed to connect to AWS Cloud.");
+        }
+    }
+
+
+    @GetMapping("/disconnect/{deviceName}")
+    public ResponseEntity<String> disconnectDevice(@PathVariable String deviceName) {
+        try{
+            String status = mqttConnectService.disconnect(deviceName);
+            return ResponseEntity.status(200).body("Device "+deviceName+" disconnected from AWS Cloud. "+status);
+        }catch (Exception e){
+            log.error("Exception while getting disconnected - ERR0R");
+            return ResponseEntity.status(500).body("Device "+deviceName+" failed to disconnect from AWS Cloud.");
+        }
+    }
+
+    @PostMapping("/publish")
+    public ResponseEntity<String> publishMessage(@RequestBody MessageModel messageModel) {
+        try{
+            String status = mqttConnectService.publishMessage(messageModel.getDeviceId(), messageModel.getPayload());
+            return ResponseEntity.status(200).body(status);
+        }catch (Exception e){
+            log.error("Exception while publishing message - ERR0R");
+            return ResponseEntity.status(500).body("Device "+messageModel.getDeviceId()+" failed to publish message on AWS Cloud.");
+        }
 
     }
 }
