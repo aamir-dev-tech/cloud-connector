@@ -59,11 +59,30 @@
 			<artifactId>dynamodb</artifactId>
 		</dependency>
 
+		<!-- AWS SQS -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>sqs</artifactId>
+		</dependency>
+
 		<!-- Paho MQTT Client -->
 		<dependency>
 			<groupId>org.eclipse.paho</groupId>
 			<artifactId>org.eclipse.paho.client.mqttv3</artifactId>
 			<version>1.2.5</version>
+		</dependency>
+
+		<!-- AWS SQS -->
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-sqs</artifactId>
+			<version>1.12.770</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-iot</artifactId>
+			<version>1.12.770</version>
 		</dependency>
 
 		<dependency>

@@ -1,5 +1,8 @@
 package com.dev.cloud_connect.service;
 
+import com.amazonaws.services.iot.client.AWSIotMqttClient;
+import com.amazonaws.services.iot.client.auth.Credentials;
+import com.amazonaws.services.iot.client.auth.StaticCredentialsProvider;
 import com.dev.cloud_connect.model.DeviceDetails;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +23,7 @@ public class IotService {
     private IotClient iotClient;
 
     public String registerDevice(String deviceName, String certificatePem, String privateKeyPem) {
-
+        
         //Map of attributes
         Map<String, String> attributesMap = new HashMap<>();
         attributesMap.put("state", "new");
@@ -69,7 +72,6 @@ public class IotService {
         DescribeThingResponse response = iotClient.describeThing(DescribeThingRequest.builder()
                         .thingName(deviceName)
                 .build());
-
         DescribeEndpointResponse endpointResponse = iotClient.describeEndpoint(DescribeEndpointRequest.builder().endpointType("iot:Data-ATS").build());
 
 
@@ -109,5 +111,15 @@ public class IotService {
             log.debug("No match found");
         }
         return "" ;
+    }
+
+    public UpdateThingResponse updateThingAttributes(String thingName, Map<String, String> attributesToUpdate) {
+
+        UpdateThingRequest request = UpdateThingRequest.builder()
+                .thingName(thingName)
+                .attributePayload(a -> a.attributes(attributesToUpdate).build())
+                .build();
+
+        return iotClient.updateThing(request);
     }
 }

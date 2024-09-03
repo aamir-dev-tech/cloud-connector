@@ -1,19 +1,20 @@
 package com.dev.cloud_connect.controller;
 
-import com.amazonaws.services.iot.client.AWSIotException;
-import com.dev.cloud_connect.model.DataMessage;
 import com.dev.cloud_connect.model.DeviceDetails;
 import com.dev.cloud_connect.model.MessageModel;
 import com.dev.cloud_connect.service.IotService;
-import com.dev.cloud_connect.service.MQTTService;
 import com.dev.cloud_connect.service.MqttConnectService;
+import com.dev.cloud_connect.service.SQSService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.iot.model.ResourceNotFoundException;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/device")
@@ -25,6 +26,7 @@ public class DeviceController {
 
     private MqttConnectService mqttConnectService;
 
+    private SQSService sqsService;
 
     @PostMapping(value = "/register/{deviceName}",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
@@ -92,5 +94,27 @@ public class DeviceController {
             return ResponseEntity.status(500).body("Device "+messageModel.getDeviceId()+" failed to publish message on AWS Cloud.");
         }
 
+    }
+
+
+    @PutMapping("/update/props/{deviceId}")
+    public ResponseEntity<String> updateThing(@PathVariable String deviceId, @RequestBody Map<String, String> attributes) {
+        try{
+            iotService.updateThingAttributes(deviceId, attributes);
+            return ResponseEntity.status(200).body("Properties updated successfully");
+        }catch (Exception ex){
+            log.error("Exception while updating things attributes {}", ex.getMessage());
+            return ResponseEntity.status(500).body("Error updating things attributes for device : "+deviceId);
+        }
+    }
+
+    @PostMapping("/cloud/publish")
+    public void publishMessage(@RequestParam String message) {
+        sqsService.sendMessage(message);
+    }
+
+    @GetMapping("/receive/message/{deviceId}")
+    public ResponseEntity<String> receiveMessage(@PathVariable String deviceId) {
+        return ResponseEntity.status(200).body(mqttConnectService.receiveMessage(deviceId));
     }
 }
