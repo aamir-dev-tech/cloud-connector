@@ -1,0 +1,83 @@
+To send a message from an IoT MQTT topic to an Amazon SQS (Simple Queue Service) queue using AWS IoT Rules, follow these steps:
+
+### 1. Set Up Your AWS SQS Queue
+
+1. **Create an SQS Queue:**
+   - Go to the [Amazon SQS console](https://console.aws.amazon.com/sqs/).
+   - Click **Create queue**.
+   - Choose the type of queue (Standard or FIFO) and configure the queue settings as needed.
+   - Click **Create Queue**.
+
+2. **Note the Queue URL:**
+   - You will need the Queue URL for your AWS IoT Rule.
+
+### 2. Create an IoT Rule
+
+1. **Open the AWS IoT Console:**
+   - Go to the [AWS IoT Core console](https://console.aws.amazon.com/iot/).
+
+2. **Navigate to Rules:**
+   - In the left-hand menu, select **Act** and then click on **Rules**.
+
+3. **Create a New Rule:**
+   - Click **Create rule**.
+
+4. **Define the Rule:**
+   - **Name your rule**: Provide a descriptive name for your rule.
+   - **Description**: Optionally, provide a description.
+   - **Rule query statement**: Write an SQL-like query to select messages from your MQTT topic. For example, if you want to process all messages from the topic `iot/topic`, you can use:
+     ```sql
+     SELECT * FROM 'iot/topic'
+     ```
+   - **Set up a Rule Action**:
+     - Click **Add action**.
+     - Choose **Send message to Amazon SQS queue**.
+     - Click **Configure action**.
+
+5. **Configure the SQS Action:**
+   - **Select the SQS queue**: Choose the SQS queue you created earlier from the dropdown list.
+   - **Role ARN**: You need to create and attach an IAM role that allows AWS IoT to send messages to your SQS queue.
+
+### 3. Create an IAM Role for AWS IoT
+
+1. **Open the IAM Console:**
+   - Go to the [IAM console](https://console.aws.amazon.com/iam/).
+
+2. **Create a New Role:**
+   - Click **Roles** in the sidebar and then **Create role**.
+   - Choose **AWS service** and select **IoT**.
+   - Click **Next: Permissions**.
+
+3. **Attach Policies:**
+   - Attach the `AmazonSQSFullAccess` policy or create a custom policy that grants the necessary permissions to access your SQS queue.
+   - Click **Next: Tags** (optional) and then **Next: Review**.
+
+4. **Name the Role:**
+   - Give the role a name, such as `IoT_SQS_Role`.
+   - Click **Create role**.
+
+5. **Attach the Role to the IoT Rule:**
+   - Go back to the AWS IoT console and in the **Set up a Rule Action** section, specify the IAM Role ARN you just created.
+
+### 4. Finalize and Activate the Rule
+
+1. **Complete the Rule Configuration:**
+   - Review the rule details and actions.
+   - Click **Create rule**.
+
+2. **Test the Rule:**
+   - Publish a message to the MQTT topic to test if the message is correctly sent to your SQS queue.
+
+### Example of Rule Action Configuration
+
+Here’s a sample configuration for sending a message to SQS:
+
+- **SQS Queue**: `https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue`
+- **Role ARN**: `arn:aws:iam::123456789012:role/IoT_SQS_Role`
+
+### Troubleshooting
+
+- **Permissions**: Ensure that the IAM role attached to the IoT rule has sufficient permissions to send messages to SQS.
+- **Message Format**: Verify that the message format from the MQTT topic is compatible with the expected format of the SQS queue.
+
+This setup should allow you to successfully route MQTT messages to an SQS queue using AWS IoT Rules.
